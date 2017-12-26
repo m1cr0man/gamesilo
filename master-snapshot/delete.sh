@@ -11,7 +11,7 @@ function check_args() {
 }
 
 function main() {
-	local current_snapshot=$(steamtank master-snapshot get)
+	local current_snapshot=$($(dirname $0)/get.*)
 	if [ $? -ne 0 -o -z "$current_snapshot" ]; then
         echo "Master snapshot does not exist"
 	else

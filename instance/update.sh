@@ -96,9 +96,9 @@ function main() {
     # If we change the data in a Steam library we could crash the client if changes are made without
     # notification. Forcing connections to close is a good call.
     echo "Deleting"
-    steamtank library delete "$1"
+    $(dirname $0)/delete.* "$1"
     echo "Creating"
-    steamtank library create "$1" "$2"
+    $(dirname $0)/create.* "$1" "$2"
     echo "Restoring files"
     restore "$1"
     echo "Done"

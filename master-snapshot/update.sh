@@ -11,12 +11,12 @@ function check_args() {
 }
 
 function main() {
-	local current_snapshot=$(steamtank master-snapshot get $1)
-	local new_snapshot=$(steamtank master-snapshot create $1 | tail -n1)
-	local user_snapshots=$(steamtank library list "$current_snapshot")
-	for user in $user_snapshots; do
+	local current_snapshot=$($(dirname $0)/get.* $1)
+	local new_snapshot=$($(dirname $0)/create.* $1 | tail -n1)
+	local user_instances=$($(dirname $0)/../list.* "$current_snapshot")
+	for user in $user_instances; do
     	echo "Updating $user"
-		steamtank library update $(basename $user) "$new_snapshot" | xargs -L1 echo -e '\t'
+		$(dirname $0)/../instance/update.* $(basename $user) "$new_snapshot" | xargs -L1 echo -e '\t'
 	done
 	# Cannot use master-snapshot delete here because it assumes there is only 1
 	zfs destroy "$current_snapshot"
