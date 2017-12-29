@@ -2,10 +2,11 @@
 set -euo pipefail
 
 function check_args() {
-	if [ $# -ne 2 ]; then
-		echo "Usage: $(basename $0) library name"
+	if [ $# -lt 2 ]; then
+		echo "Usage: $(basename $0) library name [--force]"
 		echo -e "library\tLibrary name"
 		echo -e "name\tInstance name"
+		echo -e "--force\tUpdate even if nothing has changed"
 		exit 1
 	elif [ "$2" = "master" ]; then
 		echo "master is not a valid name"
@@ -52,9 +53,6 @@ function eval_file() {
 # Moves new files to the temp folder
 function eval_library() {
 
-	# Get parent snapshot of the current instance
-	local snapshot=$("$GS" _snapshot parent "$library" "$name")
-
 	# Read to a file to simplify iteration and error handling
 	local tempfile=$(mktemp)
 	# Prints all output through one line as to not spam up the console
@@ -90,10 +88,22 @@ function restore() {
 function main() {
 	local library="$1"
 	local name="$2"
+	local force="${3-false}"
 	local root="$("$GS" _config get "$library" root)"
 	local master="$("$GS" _config get "$library" master)"
+	local snapshot=$("$GS" _snapshot parent "$library" "$name")
 	local mode=$(stat -c '%a' "/$master")
 	local fullname="$root/$name"
+
+	# Check if the parent snapshot is already up to date
+	# TODO unify this check between here and get.sh
+	if \
+		[ "$force" != "--force" ] && \
+		"$GS" _snapshot list "$library" | grep "$snapshot" | grep -E '\b0.\b' > /dev/null 2>&1
+	then
+		echo "Instance already up to date"
+		return 0
+	fi
 
 	echo "Saving unique files"
 	eval_library

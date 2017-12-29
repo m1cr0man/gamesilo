@@ -3,7 +3,7 @@ set -euo pipefail
 
 function check_args() {
 	if [ $# -lt 1 ]; then
-		echo "Usage: $(basename $0) library --raw"
+		echo "Usage: $(basename $0) library [--raw]"
 		echo -e "library\tLibrary name"
 		echo -e "--raw\tReturn names only"
 		exit 1
