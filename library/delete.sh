@@ -12,7 +12,11 @@ function check_args() {
 
 function main() {
 	# TODO Confirmation
-	# Config-get will fail it it doesn't exist
+	local libray="$1"
+
+	# Check library exists
+	"$GS" library list | grep "$1" || echo 'Library does not exist' && exit 0
+
 	local root="$("$GS" _config get "$1" root)"
 	local master="$("$GS" _config get "$1" master)"
 	zfs destroy "$master"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-. $GSDIR/config/_common.sh
+. $GSDIR/_config/_common.sh
 
 function check_args() {
 	if [ $# -ne 2 ]; then

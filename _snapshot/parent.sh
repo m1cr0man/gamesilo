@@ -16,6 +16,7 @@ function check_args() {
 
 function main() {
 	local library="$1"
+	local name="$2"
 	local root="$("$GS" _config get "$library" root)"
 	local fullname="$root/$name"
 

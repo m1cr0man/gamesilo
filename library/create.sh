@@ -8,7 +8,7 @@ function check_args() {
 		echo -e "dataset\tLibrary dataset name"
 		echo -e "group\tGroup name for files and directories"
 		echo -e "Example usage:"
-		echo -e "\t$0 steam zstorage/steam public"
+		echo -e "\t$(basename $0) steam zstorage/steam public"
 		exit 1
 	fi
 	return 0

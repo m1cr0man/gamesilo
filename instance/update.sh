@@ -15,7 +15,7 @@ function check_args() {
 }
 
 function get_temp() {
-	local tempdir="$fullname\_temp"
+	local tempdir="${fullname}_temp"
 
 	# Make sure we're not about to obliterate root
 	if [ "$tempdir" = "_temp" ]; then
@@ -40,7 +40,7 @@ function eval_file() {
 	local path=$(echo -e "$2")
 
 	if [ "$state" = "+" -a -f "$path" ]; then
-		echo "Keeping $path"
+		echo -e "\tKeeping $path"
 		new_path="$(get_temp)/$(realpath --relative-to="/$fullname" "$path")"
 		mkdir -m $mode -p $(dirname "$new_path")
 		mv "$path" "$new_path"
@@ -56,7 +56,12 @@ function eval_library() {
 
 	# Read to a file to simplify iteration and error handling
 	local tempfile=$(mktemp)
-	zfs diff "$snapshot" "$fullname" | grep -v xattrdir > $tempfile || true
+	# Prints all output through one line as to not spam up the console
+	# The fancy escape clears the line from the cursor back to the start
+	echo $fullname
+	zfs diff "$snapshot" "$fullname" | grep -v xattrdir | tee $tempfile \
+	 | cut -f2 | xargs -L1 realpath --relative-to="/$fullname" | xargs -I % echo -ne '\033[2K\r\tChecking %' || true
+	echo
 	if [ ! -s $tempfile ]; then
 		echo "No differences"
 		return 0
@@ -95,12 +100,11 @@ function main() {
 	# It is possible to update the instance without dropping connections - but that's a bad thing
 	# If we change the data in a Steam library we could crash the client if changes are made without
 	# notification. Forcing connections to close is a good call.
-	echo "Deleting"
-	"$GS" instance delete "$library" "$name"
-	echo "Creating"
-	"$GS" instance create "$library" "$name"
+	echo "Re-creating instance"
+	"$GS" instance delete "$library" "$name" | xargs -L1 echo -e '\t'
+	"$GS" instance create "$library" "$name" | xargs -L1 echo -e '\t'
 	echo "Restoring files"
-	restore
+	restore | xargs -L1 echo -e '\t'
 	echo "Done"
 	return 0
 }

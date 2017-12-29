@@ -8,7 +8,7 @@ function check_args() {
 		echo -e "dataset\tLibrary dataset name"
 		echo -e "group\tGroup name for files and directories"
 		echo -e "Example usage:"
-		echo -e "\t$0 steam zstorage/steam public"
+		echo -e "\t$(basename $0) steam zstorage/steam public"
 		exit 1
 	fi
 	return 0
@@ -21,22 +21,23 @@ function main() {
 	if [ ! -d "/$dataset" ]; then
 		echo "No such dataset /$dataset"
 		exit 2
-	elif "$GS" _config get "$1" > /dev/null 2>&1; then
+	elif "$GS" _config get "$1" root > /dev/null 2>&1; then
 		echo "Library already exists in Gamesilo"
 		exit 2
 	else
 		# Ensure master is shared
-		local share="$library\_master"
+		local share="${library}_master"
 		if [ -z "$(net usershare info "$share")" ]; then
 			net usershare add "$share" "/$dataset/master" "Gamesilo: $library master library" Everyone:F guest_ok=y
 		fi
 
 		# Ensure permissions are correct on the files
 		echo "Verifying permissions"
-		chgrp -R "$group" "$dataset" "$dataset/master"
-		chmod -R 2770 "$dataset" "$dataset/master"
+		chgrp -R "$group" "/$dataset" "/$dataset/master"
+		chmod -R 2770 "/$dataset" "/$dataset/master"
 
 		# Add config
+		echo "Adding configuration"
 		"$GS" _config create "$library"
 		"$GS" _config set "$library" root "$dataset"
 		"$GS" _config set "$library" group "$group"
@@ -47,7 +48,7 @@ function main() {
 		echo -e "\tDataset: $dataset"
 		echo -e "\tGroup: $group"
 		echo -e "\tMaster library dataset: $dataset/master"
-		echo "The master library has been shared as $library_master"
+		echo "The master library has been shared as ${library}_master"
 		echo "and can be accessed via CIFS/Samba to add games"
 		echo "See the 'instance' subcommand to manage library instances"
 		return 0

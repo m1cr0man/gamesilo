@@ -14,7 +14,7 @@ function main() {
 	local library="$1"
 
 	# Get all snapshots that have no clones, and delete them
-	"$GS" _snapshot list "$library" | grep -P '\t$' | cut -f1 | cut -d'@' -f2 | xargs -r -L1 "$GS" _snapshot delete "$library")
+	"$GS" _snapshot list "$library" | grep -P '\t$' | cut -f1 | cut -d'@' -f2 | xargs -r -L1 "$GS" _snapshot delete "$library" || true
 	echo "Snapshots pruned"
 	return 0
 }
