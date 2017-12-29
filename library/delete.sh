@@ -13,8 +13,8 @@ function check_args() {
 function main() {
 	# TODO Confirmation
 	# Config-get will fail it it doesn't exist
-	$root="$("$GS" _config get "$1" root)"
-	$master="$("$GS" _config get "$1" master)"
+	local root="$("$GS" _config get "$1" root)"
+	local master="$("$GS" _config get "$1" master)"
 	zfs destroy "$master"
 	zfs destroy "$root"
 	"$GS" _config delete "$1"

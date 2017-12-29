@@ -16,7 +16,7 @@ function main() {
 	# Create the config file
 	mkdir -p "$CONFIG_ROOT"
 	if [ -f "$CONFIG_ROOT/$1$EXT" ]; then
-		>&2 echo "Library already exists"
+		>&2 echo "Config already exists"
 		exit 2
 	else
 		touch "$CONFIG_ROOT/$1$EXT"

@@ -15,9 +15,9 @@ function check_args() {
 }
 
 function main() {
-	$zfsroot="$(dirname "$2")"
-	if [ ! -d "/$zfsroot" ]; then
-		echo "Cannot access root ZFS dataset at /$zfsroot"
+	local parent="$(dirname "$2")"
+	if [ ! -d "/$parent" ]; then
+		echo "Cannot access root dataset at /$parent"
 		exit 2
 	elif [ -e "/$2" ]; then
 		echo "Library already exists"
@@ -26,7 +26,7 @@ function main() {
 		# Configure ZFS
 		zfs create -o casesensitivity=mixed "$2"
 		zfs create -o casesensitivity=mixed "$2/master"
-		net usershare add "$1_master" "/$2/master" "$1 master library" Everyone:F guest_ok=y
+		net usershare add "$1_master" "/$2/master" "Gamesilo: $1 master library" Everyone:F guest_ok=y
 		chgrp "$3" "$2" "$2/master"
 		chmod 2770 "$2" "$2/master"
 
