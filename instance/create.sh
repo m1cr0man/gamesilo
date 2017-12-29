@@ -26,7 +26,8 @@ function main() {
 		echo "Instance already exists"
 	else
 		local snapshot="$("$GS" _snapshot get "$library")"
-		zfs clone "$snapshot" "$fullname"
+		# ACLs, group, user and permissions will be copied from master
+		zfs clone -o aclinherit=passthrough "$snapshot" "$fullname"
 		echo "Instance created"
 	fi
 

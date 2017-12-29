@@ -43,7 +43,7 @@ function main() {
 	if [ -d "/$fullname" ]; then
 		zfs destroy "$fullname"
 		echo "Instance deleted"
-		"$GS" _snapshot clean "$library"
+		"$GS" _snapshot prune "$library"
 	else
 		echo "Instance does not exist"
 	fi

@@ -15,7 +15,7 @@ function main() {
 	local master="$("$GS" _config get "$library" master)"
 	# The / after $root filters the top level directory out
 	# The second grep filters the master dataset (which is not an instance, per se) and the header
-	zfs list -o name,used,creation,origin | grep "$root/" | grep -ve "$master " -e CREATION
+	zfs list -o name,used,creation | grep "$root/" | grep -ve "$master " -e CREATION
 }
 
 check_args $*
