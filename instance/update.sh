@@ -59,9 +59,8 @@ function eval_library() {
 	local tempfile=$(mktemp)
 	# Prints all output through one line as to not spam up the console
 	# The fancy escape clears the line from the cursor back to the start
-	echo $fullname
 	zfs diff "$snapshot" "$fullname" | grep -v xattrdir | tee $tempfile \
-	 | cut -f2 | xargs -L1 realpath --relative-to="/$fullname" | xargs -I % echo -ne '\033[2K\r\tChecking %' || true
+	 | cut -f2 | xargs -r -L1 realpath --relative-to="/$fullname" | xargs -I % echo -ne '\033[2K\r\tChecking %' || true
 	echo
 	if [ ! -s $tempfile ]; then
 		echo "No differences"
