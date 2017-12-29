@@ -10,6 +10,7 @@ function check_args() {
 		echo -e "key\tName of the value"
 		exit 1
 	fi
+	check_library "$1"
 	return 0
 }
 

@@ -21,6 +21,26 @@ function check_args() {
 	return 0
 }
 
+# Used by actions to verify library
+function check_library() {
+	if [ -z "$1" ] || ! "$GS" library exists "$1"; then
+		>&2 echo "Library does not exist"
+		return 1
+	fi
+}
+
+# Used by actions to verify library and instance
+function check_instance() {
+	check_library "$1"
+	if [ -z "$2" ] || ! "$GS" instance exists "$1" "$2"; then
+		>&2 echo "Instance does not exist"
+		return 1
+	fi
+}
+
+export -f check_library
+export -f check_instance
+
 function main() {
 	$GSDIR/$1/$2.* ${@:3}
 }

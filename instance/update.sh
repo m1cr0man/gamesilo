@@ -7,10 +7,11 @@ function check_args() {
 		echo -e "library\tLibrary name"
 		echo -e "name\tInstance name"
 		exit 1
-	elif [ "$1" = "master" ]; then
+	elif [ "$2" = "master" ]; then
 		echo "master is not a valid name"
 		exit 1
 	fi
+	check_instance "$1" "$2"
 	return 0
 }
 

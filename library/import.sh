@@ -21,7 +21,7 @@ function main() {
 	if [ ! -d "/$dataset" ]; then
 		echo "No such dataset /$dataset"
 		exit 2
-	elif "$GS" _config get "$1" root > /dev/null 2>&1; then
+	elif "$GS" library exists "$library"; then
 		echo "Library already exists in Gamesilo"
 		exit 2
 	else

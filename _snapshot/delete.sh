@@ -8,6 +8,7 @@ function check_args() {
 		echo -e "date\t\tSnapshot date"
 		exit 1
 	fi
+	check_library "$1"
 	return 0
 }
 

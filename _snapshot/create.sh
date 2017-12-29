@@ -7,6 +7,7 @@ function check_args() {
 		echo -e "library\tLibrary name"
 		exit 1
 	fi
+	check_library "$1"
 	return 0
 }
 

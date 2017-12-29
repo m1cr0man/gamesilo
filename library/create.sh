@@ -22,7 +22,7 @@ function main() {
 	if [ ! -d "/$parent" ]; then
 		echo "Cannot access root dataset at /$parent"
 		exit 2
-	elif [ -e "/$dataset" ]; then
+	elif "$GS" library exists "$library"; then
 		echo "Library already exists"
 		exit 2
 	else
