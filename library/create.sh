@@ -8,42 +8,30 @@ function check_args() {
 		echo -e "dataset\tLibrary dataset name"
 		echo -e "group\tGroup name for files and directories"
 		echo -e "Example usage:"
-		echo -e "\t$0 steam zstorage/steam"
+		echo -e "\t$0 steam zstorage/steam public"
 		exit 1
 	fi
 	return 0
 }
 
 function main() {
-	local parent="$(dirname "$2")"
+	local library="$1"
+	local dataset="$2"
+	local group="$3"
+	local parent="$(dirname "$dataset")"
 	if [ ! -d "/$parent" ]; then
 		echo "Cannot access root dataset at /$parent"
 		exit 2
-	elif [ -e "/$2" ]; then
+	elif [ -e "/$dataset" ]; then
 		echo "Library already exists"
 		exit 2
 	else
 		# Configure ZFS
-		zfs create -o casesensitivity=mixed "$2"
-		zfs create -o casesensitivity=mixed "$2/master"
-		net usershare add "$1_master" "/$2/master" "Gamesilo: $1 master library" Everyone:F guest_ok=y
-		chgrp "$3" "$2" "$2/master"
-		chmod 2770 "$2" "$2/master"
+		zfs create -o casesensitivity=mixed "$dataset"
+		zfs create -o casesensitivity=mixed "$dataset/master"
 
-		# Add config
-		"$GS" _config create "$1"
-		"$GS" _config set "$1" root "$2"
-		"$GS" _config set "$1" group "$3"
-		"$GS" _config set "$1" master "$2/master"
-
-		echo "Library created!"
-		echo -e "\tName: $1"
-		echo -e "\tDataset: $2"
-		echo -e "\tGroup: $3"
-		echo -e "\tMaster library dataset: $2/master"
-		echo "The master library has been shared as $1_master"
-		echo "and can be accessed via CIFS/Samba to add games"
-		echo "See the 'instance' subcommand to manage library instances"
+		# The rest can be done by the import scripts
+		"$GS" library import "$library" "$dataset" "$group"
 		return 0
 	fi
 }
