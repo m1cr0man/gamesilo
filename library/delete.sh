@@ -31,7 +31,7 @@ function main() {
 	echo
 
 	# Delete all the instances
-	"$GS" instance list "$library" | grep -Eo "$root/[^ ]+" | rev | cut -d'/' -f1 | rev | xargs -r -L1 "$GS" instance delete "$library" || true
+	"$GS" instance list "$library" --raw | xargs -r -L1 "$GS" instance delete "$library" || true
 
 	# Unshare the master
 	local share="${library}_master"
