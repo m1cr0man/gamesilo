@@ -32,6 +32,8 @@ function main() {
 
 		# If there's a connection still open to the share, terminate it
 		# Usershare will be automagically removed when all connections die
+		# TODO this isn't sufficient unfortunately - sometimes zombie procs
+		# keep a file lock
 		if smbstatus | grep "$share" > /dev/null 2>&1; then
 			smbcontrol smbd close-share "$share"
 			echo "Note: Connections terminated"

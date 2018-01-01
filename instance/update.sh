@@ -44,7 +44,7 @@ function eval_file() {
 	if [ "$state" = "+" -a -f "$path" ]; then
 		echo -e "\tKeeping $path"
 		new_path="$(get_temp)/$(realpath --relative-to="/$fullname" "$path")"
-		mkdir -m $mode -p $(dirname "$new_path")
+		mkdir -m $mode -p "$(dirname "$new_path")"
 		mv "$path" "$new_path"
 	fi
 }
@@ -78,7 +78,7 @@ function restore() {
 		>&2 echo "Temporary path is not correct!"
 		exit 2
 	elif [ -d "$tempdir" -a -n "$(ls -A $tempdir)" ]; then
-		mv -vb $tempdir/* "/$fullname/"
+		cp -rvu $tempdir/* "/$fullname/"
 	fi
 
 	# Strip leading slash
