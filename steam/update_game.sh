@@ -8,7 +8,7 @@ function check_args() {
 		echo "Usage: $(basename "$0") library appid [-v]"
 		echo -e "library\tLibrary name"
 		echo -e "appid\tSteam App ID for target game"
-		echo -e "-v\tVerify after update"
+		echo -e "-v\tValidate after update"
 		exit 1
 	fi
 	check_library "$1"
@@ -18,17 +18,26 @@ function check_args() {
 function main() {
 	local library="$1"
 	local appid="$2"
-	local verify=$([ "${3-false}" = "-v" ] && echo "+verify" || true)
+	local validate=$([ "${3-false}" = "-v" ] && echo "validate" || true)
 
-	# Find the owner for this game
-	local owner="$("$GS" steam get_owner "$appid")"
+	# Find the owners for this game
+	local owners="$("$GS" steam get_owners "$appid")"
 
-	if [ -z "$owner" ]; then
+	if [ -z "$owners" ]; then
 		>&2 echo "Could not find an owner for $appid"
 		exit 2
 	else
-		# Run steamcmd + update the game
-		"$GS" steam _run_container "$library" "$owner" +app_update "$appid" "$verify"
+		for owner in $owners; do
+			# Run steamcmd + update the game
+			echo "Attempting to update with user $owner"
+			if "$GS" steam _run_container "$library" "$owner" +app_update "$appid" "$validate"; then
+				echo "Update successful"
+				exit 0
+			else
+				>&2 echo "Failed to update with user $owner"
+			fi
+		done
+		echo "Failed to update $appid"
 		return 0
 	fi
 }
