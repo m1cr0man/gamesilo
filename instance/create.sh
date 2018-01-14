@@ -19,7 +19,7 @@ function check_args() {
 function main() {
 	local library="$1"
 	local name="$2"
-	local perms_check="$3"
+	local perms_check="${3-false}"
 	local root="$("$GS" _config get "$library" root)"
 	local share="${library}_$name"
 	local fullname="$root/$name"
