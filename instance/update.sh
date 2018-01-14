@@ -34,55 +34,61 @@ function get_temp() {
 	return 0
 }
 
-# Determines if a file needs to be saved or not
-# If it does, moves to temp folder
-function eval_file() {
-	local state=$1
-	# Echo here ensures backslashes have been parsed
-	local path=$(echo -e "$2")
-
-	if [ "$state" = "+" -a -f "$path" ]; then
-		echo -e "\tKeeping $path"
-		new_path="$(get_temp)/$(realpath --relative-to="/$fullname" "$path")"
-		mkdir -m $mode -p $(dirname "$new_path")
-		mv "$path" "$new_path"
-	fi
-}
-
-# Uses zfs diff to scan the library for changes
-# Moves new files to the temp folder
 function eval_library() {
 
-	# Read to a file to simplify iteration and error handling
-	local tempfile=$(mktemp)
-	# Prints all output through one line as to not spam up the console
-	# The fancy escape clears the line from the cursor back to the start
-	zfs diff "$snapshot" "$fullname" | grep -v xattrdir | tee $tempfile \
-	 | cut -f2 | xargs -r -L1 realpath --relative-to="/$fullname" | xargs -I % echo -ne '\033[2K\r\tChecking %' || true
-	echo
-	if [ ! -s $tempfile ]; then
-		echo "No differences"
-		return 0
+	# ZFS diff prints paths with octal escape sequences in them (eg \0040)
+	# Solution: Pass it as an arg to echo -e
+	# All the output will be buffered and outputted at once though... ah well
+	echo "Generating diff (this may take a while on old instances)"
+	echo -e "$(zfs diff "$snapshot" "$fullname" | grep -v xattrdir | grep '^\+' | cut -f2)" > "$tempfile"
+
+	backup
+	return 0
+}
+
+function backup() {
+	local tempdir=$(get_temp)
+
+	if [ -s "$tempfile" ]; then
+		# Save the files
+		while read -r path; do
+			# Get the file relative to the instance
+			rel_path="$(realpath -m --relative-to="/$fullname" "$path")"
+			new_path="$tempdir/$rel_path"
+
+			if [ -f "$path" ]; then
+				echo -e "\tKeeping $rel_path"
+				mkdir -m $mode -p "$(dirname "$new_path")"
+				mv "$path" "$new_path"
+			fi
+		done < "$tempfile"
 	else
-		while read -r file_info; do eval_file $file_info; done < $tempfile
+		echo "No differences"
 	fi
-	rm -f $tempfile
+	return 0
 }
 
 function restore() {
 	local tempdir=$(get_temp)
 
-	# Stop if tempdir is root (don't obliterate root!)
-	# Doesn't hurt to double check ;)
-	if [ -z "$tempdir" -o "$tempdir" = "/" ]; then
-		>&2 echo "Temporary path is not correct!"
-		exit 2
-	elif [ -d "$tempdir" -a -n "$(ls -A $tempdir)" ]; then
-		mv -vu $tempdir/* "/$fullname/"
+	if [ -s "$tempfile" ]; then
+		# Restore the files
+		while read -r path; do
+			# Get the file relative to the instance
+			rel_path="$(realpath -m --relative-to="/$fullname" "$path")"
+			new_path="$tempdir/$rel_path"
+
+			if [ -f "$new_path" ]; then
+				echo -e "\tRestoring $rel_path"
+				mkdir -m $mode -p "$(dirname "$path")"
+				mv -u "$new_path" "$path"
+			fi
+		done < "$tempfile"
 	fi
 
 	# Strip leading slash
-	zfs destroy $(echo $tempdir | cut -c2-)
+	zfs destroy $(echo "$tempdir" | cut -c2-)
+	return 0
 }
 
 function main() {
@@ -94,6 +100,7 @@ function main() {
 	local snapshot=$("$GS" _snapshot parent "$library" "$name")
 	local mode=$(stat -c '%a' "/$master")
 	local fullname="$root/$name"
+	local tempfile="$(mktemp)"
 
 	# Verify permissions on the master
 	"$GS" instance _verify_perms "$library" master
@@ -102,7 +109,7 @@ function main() {
 	# TODO unify this check between here and get.sh
 	if \
 		[ "$force" != "--force" ] && \
-		"$GS" _snapshot list "$library" | grep "$snapshot" | cut -f2 | grep -E '0B' > /dev/null 2>&1
+		"$GS" _snapshot list "$library" | grep "$snapshot" | cut -f2 | grep '0B' > /dev/null 2>&1
 	then
 		echo "Instance already up to date"
 		return 0
@@ -110,14 +117,16 @@ function main() {
 
 	echo "Saving unique files"
 	eval_library
+	backup
 	# It is possible to update the instance without dropping connections - but that's a bad thing
 	# If we change the data in a Steam library we could crash the client if changes are made without
 	# notification. Forcing connections to close is a good call.
 	echo "Re-creating instance"
 	"$GS" instance delete "$library" "$name" | xargs -L1 echo -e '\t'
-	"$GS" instance create "$library" "$name" | xargs -L1 echo -e '\t'
+	"$GS" instance create "$library" "$name" -s | xargs -L1 echo -e '\t'
 	echo "Restoring files"
-	restore | xargs -L1 echo -e '\t'
+	restore
+	rm -rf "$tempfile"
 	echo "Done"
 	return 0
 }

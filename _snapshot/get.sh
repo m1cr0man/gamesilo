@@ -16,7 +16,7 @@ function main() {
 
 	# Get the latest snapshot that is up to date with the master
 	# Tail is used to stop things crashing if #snapshots != 1
-	local newest="$("$GS" _snapshot list "$library" | grep -iE '\b0.\b' | tail -n 1 | cut -f1)"
+	local newest="$("$GS" _snapshot list "$library" | grep '0B' | tail -n 1 | cut -f1)"
 	if [ -z "$newest" ]; then
 		# Create an up to date snapshot
 		"$GS" _snapshot create "$library" | tail -n 1
