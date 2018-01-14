@@ -26,6 +26,9 @@ function main() {
 	if [ -d "/$fullname" ]; then
 		echo "Instance already exists"
 	else
+		# Verify permissions on the master
+		"$GS" instance _verify_perms "$library" master
+
 		local snapshot="$("$GS" _snapshot get "$library")"
 		# ACLs, group, user and permissions will be copied from master
 		zfs clone -o aclinherit=passthrough "$snapshot" "$fullname"

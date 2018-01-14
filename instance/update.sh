@@ -78,7 +78,7 @@ function restore() {
 		>&2 echo "Temporary path is not correct!"
 		exit 2
 	elif [ -d "$tempdir" -a -n "$(ls -A $tempdir)" ]; then
-		mv -vb $tempdir/* "/$fullname/"
+		mv -vu $tempdir/* "/$fullname/"
 	fi
 
 	# Strip leading slash
@@ -95,11 +95,14 @@ function main() {
 	local mode=$(stat -c '%a' "/$master")
 	local fullname="$root/$name"
 
+	# Verify permissions on the master
+	"$GS" instance _verify_perms "$library" master
+
 	# Check if the parent snapshot is already up to date
 	# TODO unify this check between here and get.sh
 	if \
 		[ "$force" != "--force" ] && \
-		"$GS" _snapshot list "$library" | grep "$snapshot" | grep -E '\b0.\b' > /dev/null 2>&1
+		"$GS" _snapshot list "$library" | grep "$snapshot" | cut -f2 | grep -E '0B' > /dev/null 2>&1
 	then
 		echo "Instance already up to date"
 		return 0
