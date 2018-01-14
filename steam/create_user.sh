@@ -30,6 +30,12 @@ function main() {
 		mv -f "$USERS_DB.tmp" "$USERS_DB"
 		echo
 		echo "User created"
+
+		echo "Steamcmd will now start, you will be asked for a Steam Guard code"
+		# Have to get a dummy library to feed the container
+		local library="$("$GS" library list | grep -i steam | head -n1)"
+		"$GS" steam _run_container "$library" "$user"
+
 		return 0
 	fi
 }
