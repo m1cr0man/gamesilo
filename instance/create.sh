@@ -2,10 +2,11 @@
 set -euo pipefail
 
 function check_args() {
-	if [ $# -ne 2 ]; then
-		echo "Usage: $(basename $0) library name"
+	if [ $# -lt 2 ]; then
+		echo "Usage: $(basename $0) library name [-s]"
 		echo -e "library\tLibrary name"
 		echo -e "name\tInstance name"
+		echo -e "-s\tSkip permissions check"
 		exit 1
 	elif [ "$2" = "master" ]; then
 		echo "master is not a valid name"
@@ -18,6 +19,7 @@ function check_args() {
 function main() {
 	local library="$1"
 	local name="$2"
+	local perms_check="${3-false}"
 	local root="$("$GS" _config get "$library" root)"
 	local share="${library}_$name"
 	local fullname="$root/$name"
@@ -26,6 +28,11 @@ function main() {
 	if [ -d "/$fullname" ]; then
 		echo "Instance already exists"
 	else
+		if [ "$perms_check" != "-s" ]; then
+			# Verify permissions on the master
+			"$GS" instance _verify_perms "$library" master
+		fi
+
 		local snapshot="$("$GS" _snapshot get "$library")"
 		# ACLs, group, user and permissions will be copied from master
 		zfs clone -o aclinherit=passthrough "$snapshot" "$fullname"

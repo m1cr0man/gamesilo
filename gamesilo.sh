@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-export GS=$(readlink -f "$0")
-export GSDIR=$(dirname "$GS")
+export GS="$(readlink -f "$0")"
+export GSDIR="$(dirname "$GS")"
 
 function check_args() {
 	if [ $# -eq 1 ]; then

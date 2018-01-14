@@ -8,15 +8,22 @@ function check_args() {
 		echo -e "name\tInstance name"
 		exit 1
 	fi
+	check_instance "$1" "$2"
 	return 0
 }
 
 function main() {
 	local library="$1"
-	local name="$2"
-	"$GS" library exists "$library"
+	local instance="$2"
 	local root="$("$GS" _config get "$library" root)"
-	[ -d "/$root/$name" ]
+	local group="$("$GS" _config get "$library" group)"
+
+	# Ensure permissions are correct on the files
+	echo "Verifying permissions"
+	chgrp -R "$group" "/$root/$instance"
+	chmod -R 2770 "/$root/$instance"
+	echo "Done"
+	return 0
 }
 
 check_args $*
