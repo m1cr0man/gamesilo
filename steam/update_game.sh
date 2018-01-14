@@ -18,7 +18,7 @@ function check_args() {
 function main() {
 	local library="$1"
 	local appid="$2"
-	local verify=$([ "$3" = "-v" ] && echo "+verify" || true)
+	local verify=$([ "${3-false}" = "-v" ] && echo "+verify" || true)
 
 	# Find the owner for this game
 	local owner="$("$GS" steam get_owner "$appid")"

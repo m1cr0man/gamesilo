@@ -15,7 +15,7 @@ function check_args() {
 function main() {
 	local appid="$1"
 
-	grep -E "^$appid " "$GAMES_MAP" | cut -d' ' -f2 || >&2 echo "No owner" && exit 2
+	grep -E "^$appid " "$GAMES_MAP" | cut -d' ' -f2- || >&2 echo "No owner" && exit 2
 }
 
 check_args $*

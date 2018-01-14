@@ -11,8 +11,11 @@ function get_games() {
 	local user="$3"
 	local steamid="$4"
 
-	curl -o "$tmpdir/$priority" "https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?format=json&include_played_free_games=1&key=$token&steamid=$steamid"
-	echo -e "\n$user" >> "$tmpdir/$priority"
+	curl -o "$tmpdir/$priority.tmp" "https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?format=json&include_played_free_games=1&key=$token&steamid=$steamid"
+	# Cut out the app IDs
+	grep appid "$tmpdir/$priority.tmp" | grep -Eo '[0-9]+' > "$tmpdir/$priority"
+	echo -e "$user" >> "$tmpdir/$priority"
+	rm "$tmpdir/$priority.tmp"
 }
 
 function main() {
@@ -35,19 +38,27 @@ function main() {
 
 		echo "Updating games list"
 		echo -n "" > "$GAMES_MAP"
-		touch "$GAMES_MAP.filter"
 
 		# The use of 'ls' here handles the priority
 		for gamelist in $(ls -1 $tmpdir/); do
+			echo "$gamelist"
 			local user="$(tail -n 1 "$tmpdir/$gamelist")"
 
-			# Cut out the app IDs.
-			# Filter out those we've already covered (from the .filter file)
-			# Append new ones to the filter (this is safe because grep before will cache the file)
-			# Print app ID and username together
-			grep appid "$tmpdir/$gamelist" | grep -Eo '[0-9]+' | grep -vf "$GAMES_MAP.filter" | tee -a "$GAMES_MAP.filter" | awk '{ print $1, "'"$user"'" }' >> "$GAMES_MAP" || true
-		done < "$USERS_DB"
-		rm -f "$GAMES_MAP.filter"
+			while read -r appid; do
+				if [ "$appid" != "$user" ]; then
+					if ! grep "^$appid " "$GAMES_MAP" > /dev/null; then
+						# Add appid + owner
+						echo "$appid $user" >> "$GAMES_MAP"
+					else
+						# Append owner
+						sed -i "/^$appid /s/$/ $user/" "$GAMES_MAP"
+					fi
+				fi
+			done < "$tmpdir/$gamelist"
+		done
+		# Sort the output
+		sort -n "$GAMES_MAP" > "$GAMES_MAP.sorted"
+		mv "$GAMES_MAP.sorted" "$GAMES_MAP"
 		rm -rf /tmp/gamesilo
 
 		echo "Done!"
