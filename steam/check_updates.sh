@@ -43,32 +43,37 @@ function main() {
 	local tmpdir="$(mktemp -d)"
 	echo "Mapping games to owners"
 	for appid in $appids; do
-		local owner="$("$GS" steam get_owners "$appid" | cut -d' ' -f1)"
-		echo "$appid" >> "$tmpdir/$owner"
+		local owner="$("$GS" steam get_owners "$appid" | cut -d' ' -f1 || true)"
+		if [ -n "$owner" ]; then
+			echo "$appid" >> "$tmpdir/$owner"
+		else
+			2>&1 echo "No owner for $appid"
+		fi
 	done
 
 	# Download info for all games
 	for owner in $(ls -1 "$tmpdir"); do
 		echo "Getting info for games owned by $owner (total: $(wc -l "$tmpdir/$owner"))"
-		if "$GS" steam _run_container "$library" "$owner" $(awk '{ print "+app_info_print", $1 }' "$tmpdir/$owner") | tee "$tmpdir/$owner.info"; then
+		if "$GS" steam _run_container "$library" "$owner" $(awk '{ print "+app_info_print", $1 }' "$tmpdir/$owner") > "$tmpdir/$owner.info"; then
 			echo "Download successful"
 
 			# Turn the raw steamcmd output into separate files
 			local datapath="$tmpdir/${owner}_data"
 			mkdir -p "$datapath"
 
-			# Find "AppID :", increment, i, set x=1, go to next line
+			# Find "AppID :", increment i, set x=1, go to next line
 			# When x == 1, write line to "temp$i"
 			# "x" stops extraneous output from steamcmd being written to a file
 			awk '/AppID \: .*/ { i++;flag=1;next } flag==1 { print > "'"$datapath"/'temp" i }' "$tmpdir/$owner.info"
-
-			# Read each file and print if it needs updating
-			for datafile in "$datapath"/*; do
-				check_info "$datafile"
-			done
 		else
 			>&2 echo "Failed to get info for $owner's games"
+			>&2 cat "$tmpdir/$owner.info"
 		fi
+	done
+
+	# Read each file and print if it needs updating
+	for datafile in "$tmpdir"/*_data/*; do
+		check_info "$datafile"
 	done
 
 	rm -rf "$tmpdir"
