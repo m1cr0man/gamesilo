@@ -48,7 +48,8 @@ function eval_library() {
 function backup() {
 	local tempdir=$(get_temp)
 
-	if [ -s "$tempfile" ]; then
+	# Non-0 and not just a new line
+	if [ -s "$tempfile" -a "$(head -1 "$tempfile")" != "" ]; then
 		# Save the files
 		while read -r path; do
 			# Get the file relative to the instance
@@ -70,17 +71,18 @@ function backup() {
 function restore() {
 	local tempdir=$(get_temp)
 
-	if [ -s "$tempfile" ]; then
+	# Non-0 and not just a new line
+	if [ -s "$tempfile" -a "$(head -1 "$tempfile")" != "" ]; then
 		# Restore the files
 		while read -r path; do
 			# Get the file relative to the instance
 			rel_path="$(realpath -m --relative-to="/$fullname" "$path")"
 			new_path="$tempdir/$rel_path"
 
-			if [ -f "$new_path" ]; then
+			if [ -f "$new_path" -a ! -f "$path" ]; then
 				echo -e "\tRestoring $rel_path"
 				mkdir -m $mode -p "$(dirname "$path")"
-				mv -u "$new_path" "$path"
+				mv -n "$new_path" "$path"
 			fi
 		done < "$tempfile"
 	fi
