@@ -105,10 +105,9 @@ function main() {
 	"$GS" instance _verify_perms "$library" master
 
 	# Check if the parent snapshot is already up to date
-	# TODO unify this check between here and get.sh
 	if \
 		[ "$force" != "--force" ] && \
-		"$GS" _snapshot list "$library" | grep "$snapshot" | cut -f2 | grep '0B' > /dev/null 2>&1
+		"$GS" instance stale "$library" "$name" > /dev/null 2>&1
 	then
 		echo "Instance already up to date"
 		return 0
