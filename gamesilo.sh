@@ -8,14 +8,14 @@ function check_args() {
 		echo "Usage: $(basename $0) $1 action [args]"
 		echo -e "action\tOne of the following:"
 		basename -a "$GSDIR/$1"/[^_]* | cut -d'.' -f1 | xargs -L1 echo -e '\t'
-		echo -e "args\tleave action blank to get a list"
+		echo -e "args\tleave blank to get a list"
 		exit 1
 	elif [ $# -lt 2 ]; then
 		echo "Usage: $(basename $0) command action [args]"
 		echo -e "command\tOne of the following:"
 		basename -a "$GSDIR"/[^_]*/ | xargs -L1 echo -e '\t'
-		echo -e "action\tLeave command blank to get a list"
-		echo -e "args\tLeave action blank to get a list"
+		echo -e "action\tLeave blank to get a list"
+		echo -e "args\tLeave blank to get a list"
 		exit 1
 	fi
 	return 0
