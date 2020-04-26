@@ -41,7 +41,7 @@ function main() {
 
 	# Share
 	if [ -z "$(net usershare info "$share")" ]; then
-		net usershare add "$share" "/$fullname" "Gamesilo: $library $name instance" Everyone:F guest_ok=y
+		net usershare add "$share" "/$fullname" "Gamesilo: $library $name instance" S-1-1-0:F guest_ok=y
 		echo "Instance shared as $share"
 	else
 		echo "Instance already shared"
